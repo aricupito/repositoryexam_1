@@ -156,7 +156,30 @@ tmpdf %>%
   geom_boxplot() 
 ```
 
-Problem 6: 
+Problem 4
+i. 
+Done
+
+ii. 
+Done
+
+iii. 
+```{r}
+knitr::include_graphics("Question4.png")
+```
+
+iv.
+Done
+
+Problem 5
+i. 
+Personal Access Token:
+fa4f0556b2b3300d5f46f8844d69a729349046c4
+
+ii.
+
+
+Problem 6
 i. 
 ```{r}
 flights <- as.data.table(flights)
