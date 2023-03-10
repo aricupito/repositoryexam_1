@@ -1,0 +1,242 @@
+---
+title: "Exam_1"
+author: "Andrew"
+date: "2023-03-10"
+output: html_document
+---
+Loading in libraries
+```{r}
+library(forcats)
+library(tidyverse)
+library(nycflights13)
+library(data.table)
+library(lubridate)
+library(Sleuth3)
+```
+
+Problem 1
+i.
+```{r}
+help(gss_cat)
+print("Variables: year, marital, age, race, rincome, partyid, relig, denom, tvhours")
+```
+
+ii.
+```{r}
+gss_cat %>% 
+  class
+```
+
+iii.
+```{r}
+gss_cat %>% 
+  sapply(class)
+```
+
+iv. 
+```{r}
+# ascending 
+gss_cat[order(gss_cat$relig),] 
+
+# descending 
+gss_cat[order(desc(gss_cat$relig)),] 
+```
+
+v. 
+```{r}
+for(i in 1:9){
+  print(table(gss_cat[i])) 
+}
+```
+
+vi.
+```{r}
+name = 0
+for(i in 1:9){
+  name = i
+  name = as.data.frame(table(unlist(gss_cat[i])))
+  colnames(name) <- c(colnames(gss_cat[i]), "Frequency")
+  name <- name[order(name$Frequency, decreasing = TRUE), ]
+  print(name)
+}
+```
+
+vii.
+```{r}
+levels(gss_cat$marital) <- c("No answer" = 'NA', "Never married" = 'NM', "Separated" = 'S', "Divorced" = 'D', "Widowed" = 'W', "Married" = 'M')
+```
+
+Problem 2
+i.
+```{r}
+x = 100
+fib = numeric(x)
+
+fib[1] = 1
+fib[2] = 1
+for (i in 3:x)
+{
+  fib[i] = fib[i-1]+fib[i-2] 
+}
+
+print(fib)
+```
+
+ii.
+```{r}
+print(fib[1:15])
+```
+
+iii.
+```{r}
+n = as.integer(readline("Which fibonacci number do you want between 1 and 100? "))
+
+print(fib[n])
+```
+
+iv. 
+```{r}
+print(log2(fib[100]))
+```
+
+Problem 3
+i.
+```{r}
+wmta_csv = read_csv("https://dcgerard.github.io/stat_412_612/data/wmata_ridership.csv")
+
+write_csv(wmta_csv, "wmata_ridership.csv")
+```
+
+ii.
+```{r}
+wmata <- read_csv("wmata_ridership.csv")
+```
+
+iii.
+```{r}
+glimpse(wmata)
+```
+Variables:
+Date - 5,469 days starting from January 1st, 2004.
+Total - Total recorded ridership for the accompanying day on WMATA transit options. 
+
+iv.
+```{r}
+wmata2 <- wmata %>%
+  mutate(day = day(Date),
+         month = month(Date),
+         year = year(Date))
+
+wmata2
+```
+
+v.
+```{r}
+tmpdf = wmata2 %>% 
+                group_by(month, day) %>% 
+                mutate(total_rides = sum(Total)) %>%
+                ungroup()
+
+wamta_month = tmpdf %>% 
+                      group_by(month) %>% 
+                      mutate(prop_rides = total_rides / sum(total_rides))
+
+wamta_month
+```
+
+vi.
+```{r}
+tmpdf <- wamta_month %>% 
+  filter(year != 2002) %>%
+  ungroup() %>% 
+  group_by(day)
+
+tmpdf %>% 
+  ggplot(aes(x = day, y = prop_rides)) +
+  geom_boxplot() 
+```
+
+Problem 6: 
+i. 
+```{r}
+flights <- as.data.table(flights)
+
+tmpdf <- airlines %>% 
+  data.table(key = "carrier")
+
+flights <- merge(flights, tmpdf, by = "carrier", all.x = TRUE)
+
+flights
+```
+
+ii.
+```{r}
+flights[, (med_air_time = median(air_time, na.rm = TRUE)), by = .(month)]
+```
+
+iii.
+```{r}
+flights[carrier == "DL", .N, by = .(origin)]
+```
+
+iv. 
+```{r}
+flights[month %in% (1:2), .(avg_dep_delay = mean(dep_delay, na.rm = TRUE)), by = .(origin)]
+```
+
+Problem 7
+a. 
+```{r}
+print("35% is a sample statistic because it is only based on the survey of 1,500 adults. It cannot be used to represent the whole population.")
+```
+
+b. 
+```{r}
+percent = 0.35
+n = 1500
+z = qnorm(0.975) 
+
+moe = (z * sqrt(percent * (1 - percent) / n))
+low = (percent - moe)
+high = (percent + moe)
+
+print(paste("It can be said with 95% confidence that between ", round(low, 2), "% and ", round(high, 2), "% of adults think marajuana should be made legal.", sep = ""))
+```
+
+Problem 8
+Data
+```{r}
+ex0330
+```
+Confidence intervals
+```{r}
+ex0330 %>% 
+  filter(Educ == 12) -> tmpdf1
+
+ex0330 %>% 
+  filter(Educ == 16) -> tmpdf2
+
+t.test(tmpdf1$Income2005)$conf.int
+t.test(tmpdf2$Income2005)$conf.int
+```
+Confidence intervals interpretation: The confidence interval for Educ is ( 13.05, 13.23) and the confidence interval for Income2005 is (43966.76, 48629.26). This means that we are 95% confident that the true mean of Educ falls between 13.05 and 13.23, and the true mean of Income2005 falls between 43966.76 and 48629.26.
+
+Range
+```{r}
+# Should also do mean and median
+range(ex0330$Educ)
+range(ex0330$Income2005)
+```
+Range estimates: The range for Educ is 12 to 16, and the range for Income2005 is 200 to 519340. This means that the values of number of years of education range from 12 to 16, and the values of Income range from 200 to 519340.
+
+```{r}
+# plot data to see
+plot(ex0330$Educ, ex0330$Income2005, xlab = "Educ", ylab = "Income2005")
+```
+
+```{r}
+# now let's look at correlation
+correlation <- cor(ex0330$Educ, ex0330$Income2005)
+print(correlation)
+```
+This means that there is a positive but moderate relationship between the two variables. This suggests that as the level of education increases, the income level tends to increase as well, but the relationship is not very strong.
